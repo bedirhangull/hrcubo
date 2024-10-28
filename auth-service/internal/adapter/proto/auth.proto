@@ -1,0 +1,91 @@
+syntax = "proto3";
+
+package auth;
+
+option go_package = "github.com/bedirhangull/hrcubo/auth-service/internal/adapter/proto";
+
+enum UserRole {
+    ADMIN = 0;
+    USER = 1;
+    GUEST = 2;
+    DIRECTOR = 4;
+    MANAGER = 5;
+}
+
+message UserProfile {
+    string first_name = 1;
+    string last_name = 2;
+    optional string phone = 3;
+    optional string image_id = 4;
+    bool is_user_premium = 5;
+}
+
+message RegisterRequest {
+    string id = 1;
+    string email = 2;
+    string password = 3;
+    UserProfile profile = 4;
+    UserRole role = 5;
+    string created_at = 6;
+    string updated_at = 7;
+}
+
+message RegisterResponse {
+    string id = 1;
+    string email = 2;
+    UserProfile profile = 3;
+    UserRole role = 4;
+    string created_at = 5;
+    string updated_at = 6;
+    bool success = 7;
+}
+
+message LoginRequest {
+    string email = 1;
+    string password = 2;
+}
+
+message LoginResponse {
+    string id = 1;
+    string email = 2;
+    UserProfile profile = 3;
+    UserRole role = 4;
+    string created_at = 5;
+    string updated_at = 6;
+    bool success = 7;
+    string token = 8;
+}
+
+message UpdateUserRequest {
+    string id = 1;
+    optional string email = 2; 
+    optional string password = 3;
+    optional UserProfile profile = 4;
+    optional UserRole role = 5;
+    optional string updated_at = 6;
+}
+
+message UpdateUserResponse {
+    string id = 1;
+    string email = 2;
+    UserProfile profile = 3; 
+    UserRole role = 4;
+    string created_at = 5;
+    string updated_at = 6;
+    bool success = 7;
+}
+
+message DeleteUserRequest {
+    string id = 1;
+}
+
+message DeleteUserResponse {
+    bool success = 1;
+}
+
+service AuthService {
+    rpc Register(RegisterRequest) returns (RegisterResponse);
+    rpc Login(LoginRequest) returns (LoginResponse);
+    rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse);
+    rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse);
+}

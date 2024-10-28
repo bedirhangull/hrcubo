@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS "invites";
+DROP TABLE IF EXISTS "user_teams";
+DROP TABLE IF EXISTS "team";
