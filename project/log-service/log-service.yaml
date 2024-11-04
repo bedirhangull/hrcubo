@@ -4,6 +4,12 @@ metadata:
   name: log-service
 spec:
   template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/min-scale: "1"
+        autoscaling.knative.dev/target: "100"
+        autoscaling.knative.dev/scale-down-delay: "15m"
+        autoscaling.knative.dev/window: "60s"
     spec:
       containerConcurrency: 50
       containers:
