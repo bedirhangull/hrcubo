@@ -1,0 +1,4 @@
+packageName: "log-service"
+dockerfile: true
+gitignore: true
+envFile: true
