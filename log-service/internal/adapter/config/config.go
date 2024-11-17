@@ -1,0 +1,66 @@
+package config
+
+import (
+	"log"
+	"os"
+	"path/filepath"
+
+	"github.com/joho/godotenv"
+)
+
+type (
+	Container struct {
+		DB     *DB
+		Server *Server
+	}
+
+	DB struct {
+		Connection string
+		Host       string
+		Port       string
+		User       string
+		Name       string
+		Password   string
+	}
+
+	Server struct {
+		Url  string
+		Port string
+	}
+)
+
+func New() (*Container, error) {
+	if os.Getenv("APP_ENV") != "production" {
+		currentDir, err := os.Getwd()
+		if err != nil {
+			return nil, err
+		}
+
+		envPath := filepath.Join(currentDir, ".env")
+		log.Println("Loading env file from: ", envPath)
+
+		err = godotenv.Load(envPath)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	server := &Server{
+		Url:  os.Getenv("HTTP_URL"),
+		Port: os.Getenv("HTTP_PORT"),
+	}
+
+	db := &DB{
+		Connection: os.Getenv("DB_CONNECTION"),
+		Host:       os.Getenv("DB_HOST"),
+		Port:       os.Getenv("DB_PORT"),
+		Name:       os.Getenv("DB_NAME"),
+		User:       os.Getenv("DB_USER"),
+		Password:   os.Getenv("DB_PASSWORD"),
+	}
+
+	return &Container{
+		DB:     db,
+		Server: server,
+	}, nil
+}

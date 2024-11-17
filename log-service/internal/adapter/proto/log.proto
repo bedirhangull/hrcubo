@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+package log;
+
+option go_package = "github.com/bedirhangull/hrcubo/log-service/internal/adapter/proto";
+
+enum LogLevel {
+    DEBUG = 0;
+    INFO = 1;
+    WARN = 2;
+    ERROR = 3;
+    FATAL = 4;
+}
+
+message Log {
+    string id = 1;
+    string message = 2;
+    LogLevel level = 3;
+    string created_at = 4;
+    string updated_at = 5;
+}
+
+message LogRequest {
+    string id = 1;
+    string message = 2;
+    LogLevel level = 3;
+    string created_at = 4;
+    string updated_at = 5;
+}
+
+message LogResponse {
+    string id = 1;
+    string message = 2;
+    LogLevel level = 3;
+    string created_at = 4;
+    string updated_at = 5;
+    bool success = 6;
+}
+
+message GetLogRequest {
+    string id = 1;
+}
+
+message GetLogResponse {
+    string id = 1;
+    string message = 2;
+    LogLevel level = 3;
+    string created_at = 4;
+    string updated_at = 5;
+    bool success = 6;
+}
+
+message DeleteLogRequest {
+    string id = 1;
+}
+
+message DeleteLogResponse {
+    string id = 1;
+    bool success = 2;
+}
+
+message ListLogRequest {}
+
+message ListLogResponse {
+    repeated Log logs = 1;
+    bool success = 2;
+}
+
+service LogService {
+    rpc CreateLog(LogRequest) returns (LogResponse);
+    rpc GetLog(GetLogRequest) returns (GetLogResponse);
+    rpc DeleteLog(DeleteLogRequest) returns (DeleteLogResponse);
+    rpc ListLog(ListLogRequest) returns (ListLogResponse);
+}
