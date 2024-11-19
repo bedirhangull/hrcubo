@@ -12,11 +12,14 @@ spec:
       containers:
         - image: bedirhangull/hrcubo-auth-service:0.2
           ports:
-            - containerPort: 8080
+            - name: h2c
+              containerPort: 8080
           readinessProbe:
             tcpSocket:
               port: 8080
           env:
+            - name: HTTP_PORT
+              value: "8080"
             - name: DB_HOST
               value: postgres-service
             - name: DB_PORT
@@ -24,12 +27,12 @@ spec:
             - name: DB_USER
               valueFrom:
                 secretKeyRef:
-                  name: postgres-secret
+                  name: postgres-secrets
                   key: POSTGRES_USER
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: postgres-secret
+                  name: postgres-secrets
                   key: POSTGRES_PASSWORD
             - name: DB_NAME
               valueFrom:

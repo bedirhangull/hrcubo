@@ -15,11 +15,14 @@ spec:
       containers:
         - image: bedirhangull/hrcubo-log-service:0.1
           ports:
-            - containerPort: 8080
+            - name: h2c 
+              containerPort: 8081 
           readinessProbe:
             tcpSocket:
-              port: 8080
+              port: 8081
           env:
+            - name: HTTP_PORT
+              value: "8081"
             - name: DB_HOST
               value: mongodb
             - name: DB_PORT
