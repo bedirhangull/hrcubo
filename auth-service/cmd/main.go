@@ -9,12 +9,15 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/bedirhangull/hrcubo/auth-service/internal/adapter/client"
 	"github.com/bedirhangull/hrcubo/auth-service/internal/adapter/config"
 	"github.com/bedirhangull/hrcubo/auth-service/internal/adapter/grpcserver"
 	"github.com/bedirhangull/hrcubo/auth-service/internal/adapter/storage/postgres"
 	"github.com/bedirhangull/hrcubo/auth-service/internal/adapter/storage/postgres/repository"
 	"github.com/bedirhangull/hrcubo/auth-service/internal/core/service"
 	"github.com/bedirhangull/hrcubo/auth-service/pkg/logger"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 func main() {
@@ -58,9 +61,21 @@ func main() {
 
 	logger.Log(logger.NewLogItem("INFO", "Migration is successful"))
 
+	// service url from env
+	sl := config.NewServiceList()
+
+	// Log connection
+	logConn, err := grpc.NewClient(sl.GetServiceURL("log"),
+		grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatalf("Failed to connect to log service: %v", err)
+	}
+	defer logConn.Close()
+
 	// Dependency injection
+	logClient := client.NewClient(logConn)
 	userRepo := repository.NewRepository(db)
-	userService := service.NewUserService(userRepo)
+	userService := service.NewUserService(userRepo, logClient)
 	grpcServer := grpcserver.NewServer(userService)
 
 	errChan := make(chan error, 1)
