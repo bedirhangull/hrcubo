@@ -1,22 +1,34 @@
 package config
 
-import "os"
+import (
+	"errors"
+	"os"
+)
 
 type ServiceList struct {
-	Service []string
+	services map[string]string
 }
 
 func NewServiceList() *ServiceList {
 	return &ServiceList{
-		Service: []string{"log"},
+		services: map[string]string{
+			"log": "localhost:8081",
+		},
 	}
 }
 
-func (s *ServiceList) GetServiceURL(name string) string {
-	for _, service := range s.Service {
-		if service == name {
-			return os.Getenv(service)
+func (s *ServiceList) ResolveServiceURL(name string) (string, error) {
+	url, ok := s.services[name]
+	if !ok {
+		return "", errors.New("service not found: " + name)
+	}
+
+	if os.Getenv("APP_ENV") == "production" {
+		prodURL := os.Getenv(name + "_SERVICE_URL")
+		if prodURL != "" {
+			return prodURL, nil
 		}
 	}
-	return ""
+
+	return url, nil
 }
