@@ -2,8 +2,11 @@ package service
 
 import (
 	"context"
+	"log"
 
+	"github.com/bedirhangull/hrcubo/auth-service/internal/adapter/client"
 	pb "github.com/bedirhangull/hrcubo/auth-service/internal/adapter/proto"
+	proto "github.com/bedirhangull/hrcubo/auth-service/internal/adapter/proto/log"
 	"github.com/bedirhangull/hrcubo/auth-service/internal/core/port"
 	"github.com/bedirhangull/hrcubo/auth-service/pkg/util"
 	"google.golang.org/grpc/codes"
@@ -11,12 +14,14 @@ import (
 )
 
 type UserService struct {
-	repo port.AuthRepository
+	repo      port.AuthRepository
+	logClient *client.Client
 }
 
-func NewUserService(repo port.AuthRepository) *UserService {
+func NewUserService(repo port.AuthRepository, logClient *client.Client) *UserService {
 	return &UserService{
-		repo: repo,
+		repo:      repo,
+		logClient: logClient,
 	}
 }
 
@@ -33,6 +38,17 @@ func (s *UserService) Register(ctx context.Context, req *pb.RegisterRequest) (*p
 		return nil, err
 	}
 
+	logRes, err := s.logClient.CreateLog(ctx, "User registered: "+req.Email, proto.LogLevel_INFO)
+	if err != nil {
+		log.Printf("Failed to log registration: %v", err)
+		return user, nil
+	}
+
+	if !logRes.Success {
+		log.Printf("Log creation unsuccessful")
+		return user, nil
+	}
+
 	return user, nil
 }
 
@@ -43,6 +59,17 @@ func (s *UserService) Login(ctx context.Context, req *pb.LoginRequest) (*pb.Logi
 	user, err := s.repo.GetUserByEmail(ctx, req)
 	if err != nil {
 		return nil, err
+	}
+
+	logRes, err := s.logClient.CreateLog(ctx, "User login: "+req.Email, proto.LogLevel_INFO)
+	if err != nil {
+		log.Printf("Failed to log registration: %v", err)
+		return user, nil
+	}
+
+	if !logRes.Success {
+		log.Printf("Log creation unsuccessful")
+		return user, nil
 	}
 
 	return user, nil
@@ -78,6 +105,18 @@ func (s *UserService) UpdateUser(ctx context.Context, req *pb.UpdateUserRequest)
 	if err != nil {
 		return nil, err
 	}
+
+	logRes, err := s.logClient.CreateLog(ctx, "User updated: "+req.Id, proto.LogLevel_INFO)
+	if err != nil {
+		log.Printf("Failed to log registration: %v", err)
+		return user, nil
+	}
+
+	if !logRes.Success {
+		log.Printf("Log creation unsuccessful")
+		return user, nil
+	}
+
 	return user, nil
 
 }
@@ -86,6 +125,17 @@ func (s *UserService) DeleteUser(ctx context.Context, req *pb.DeleteUserRequest)
 	_, err := s.repo.DeleteUser(ctx, req)
 	if err != nil {
 		return nil, err
+	}
+
+	logRes, err := s.logClient.CreateLog(ctx, "User registered: "+req.Id, proto.LogLevel_INFO)
+	if err != nil {
+		log.Printf("Failed to log registration: %v", err)
+		return &pb.DeleteUserResponse{Success: false}, nil
+	}
+
+	if !logRes.Success {
+		log.Printf("Log creation unsuccessful")
+		return &pb.DeleteUserResponse{Success: false}, nil
 	}
 
 	return &pb.DeleteUserResponse{Success: true}, nil
