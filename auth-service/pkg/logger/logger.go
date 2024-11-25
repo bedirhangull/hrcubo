@@ -29,4 +29,14 @@ func Log(logItem *LogItem) {
 		color.Yellow(logItem.Level + ":" + logItem.Message)
 		return
 	}
+
+	if logItem.Level == "WARN" {
+		color.Yellow(logItem.Level + ":" + logItem.Message)
+		return
+	}
+
+	if logItem.Level == "SUCCESS" {
+		color.Green(logItem.Level + ":" + logItem.Message)
+		return
+	}
 }

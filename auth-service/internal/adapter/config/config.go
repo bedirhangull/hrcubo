@@ -13,6 +13,7 @@ type (
 		DB     *DB
 		Server *Server
 		JWT    *JWT
+		Redis  *Redis
 	}
 
 	DB struct {
@@ -32,6 +33,12 @@ type (
 	JWT struct {
 		Secret string
 		Expire int
+	}
+
+	Redis struct {
+		Host     string
+		Port     string
+		Password string
 	}
 )
 
@@ -70,9 +77,16 @@ func New() (*Container, error) {
 		Expire: 60,
 	}
 
+	redis := &Redis{
+		Host:     os.Getenv("REDIS_HOST"),
+		Port:     os.Getenv("REDIS_PORT"),
+		Password: os.Getenv("REDIS_PASSWORD"),
+	}
+
 	return &Container{
 		DB:     db,
 		Server: server,
 		JWT:    jwt,
+		Redis:  redis,
 	}, nil
 }
