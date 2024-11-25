@@ -14,6 +14,7 @@ import (
 	"github.com/bedirhangull/hrcubo/auth-service/internal/adapter/grpcserver"
 	"github.com/bedirhangull/hrcubo/auth-service/internal/adapter/storage/postgres"
 	"github.com/bedirhangull/hrcubo/auth-service/internal/adapter/storage/postgres/repository"
+	"github.com/bedirhangull/hrcubo/auth-service/internal/adapter/storage/redis"
 	"github.com/bedirhangull/hrcubo/auth-service/internal/core/service"
 	"github.com/bedirhangull/hrcubo/auth-service/pkg/logger"
 	"google.golang.org/grpc"
@@ -39,7 +40,7 @@ func main() {
 	}
 	defer db.Close()
 
-	dbLog := logger.NewLogItem("INFO", "DB Connection is successful")
+	dbLog := logger.NewLogItem("SUCCESS", "DB Connection is successful")
 	logger.Log(dbLog)
 
 	// Test the database connection
@@ -55,27 +56,44 @@ func main() {
 		migrationError := logger.NewLogItem("ERROR", fmt.Sprintf("Migration error: %v", err))
 		logger.Log(migrationError)
 	} else {
-		migrationSuccess := logger.NewLogItem("INFO", "Migrations completed successfully")
+		migrationSuccess := logger.NewLogItem("SUCCESS", "Migrations completed successfully")
 		logger.Log(migrationSuccess)
 	}
 
-	logger.Log(logger.NewLogItem("INFO", "Migration is successful"))
+	logger.Log(logger.NewLogItem("SUCCESS", "Migration is successful"))
+
+	//cache implementation
+	cache, err := redis.NewRedis(ctx, newConfig.Redis)
+	if err != nil {
+		log.Fatalf("Error initializing cache connection", "error", err)
+		os.Exit(1)
+	}
+
+	defer cache.Close()
+	logForCache := logger.NewLogItem("SUCCESS", "Cache connection is successful")
+	logger.Log(logForCache)
 
 	// service url from env
 	sl := config.NewServiceList()
 
 	// Log connection
-	logConn, err := grpc.NewClient(sl.GetServiceURL("log"),
+	logServiceURL, err := sl.ResolveServiceURL("log")
+	if err != nil {
+		log.Fatalf("Failed to resolve log service URL: %v", err)
+	}
+
+	logConn, err := grpc.NewClient(logServiceURL,
 		grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("Failed to connect to log service: %v", err)
 	}
+
 	defer logConn.Close()
 
 	// Dependency injection
 	logClient := client.NewClient(logConn)
 	userRepo := repository.NewRepository(db)
-	userService := service.NewUserService(userRepo, logClient)
+	userService := service.NewUserService(userRepo, cache, logClient)
 	grpcServer := grpcserver.NewServer(userService)
 
 	errChan := make(chan error, 1)
